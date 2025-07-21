@@ -104,6 +104,9 @@ def dataset_from_args(data_args: DataArguments) -> datasets.DatasetDict:
         raw_datasets = load_one_million_instructions()
         raw_datasets = raw_datasets.train_test_split(test_size=0.01)
         raw_datasets["validation"] = raw_datasets["test"]
+    elif data_args.dataset_name == "person_finder":
+        raw_datasets = load_person_finder()
+        raw_datasets = raw_datasets.train_test_split(test_size=0.2)
     elif data_args.dataset_name == "luar_reddit":
         all_luar_datasets = load_luar_reddit()
         raw_datasets = datasets.DatasetDict(
