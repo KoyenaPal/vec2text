@@ -180,6 +180,48 @@ class ModelArguments:
             "choices": FREEZE_STRATEGIES,
         },
     )
+    
+    # Gradient-related attributes for inversion from gradients
+    reduction_version_SVD: bool = field(
+        default=True,
+        metadata={"help": "Whether to use SVD for gradient reduction"},
+    )
+    reduction_version_JL: bool = field(
+        default=False,
+        metadata={"help": "Whether to use Johnson-Lindenstrauss for gradient reduction"},
+    )
+    embed_in_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use embed_in gradients"},
+    )
+    embed_out_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use embed_out gradients"},
+    )
+    layer_0_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 0 gradients"},
+    )
+    layer_1_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 1 gradients"},
+    )
+    layer_2_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 2 gradients"},
+    )
+    layer_3_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 3 gradients"},
+    )
+    layer_4_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 4 gradients"},
+    )
+    layer_5_gradient: bool = field(
+        default=False,
+        metadata={"help": "Whether to use layer 5 gradients"},
+    )
 
     def __post_init__(self):
         if self.config_overrides is not None and (
@@ -286,6 +328,7 @@ class TrainingArguments(transformers.TrainingArguments):
                 "inversion_unet",
                 "inversion_from_logits",
                 "inversion_from_logits_emb",
+                "inversion_from_gradients",
                 "inversion_decoder_only",  # baseline: use single embedding as input to a decoder
                 "inversion_bow",
                 "inversion_na",

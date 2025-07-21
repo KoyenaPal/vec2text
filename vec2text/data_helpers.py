@@ -190,6 +190,23 @@ def load_beir_corpus(name: str) -> List[str]:
         corpus = [k["text"] for k in corpus.values()]
         return corpus[:MAX_N]
 
+def load_person_finder() -> datasets.Dataset:
+    d = datasets.load_dataset("koyena/person_finder_names")["train"]
+    d = d.rename_column("sentence", "text")
+    # Filter rows where is_name == 1
+    positive_rows = d.filter(lambda x: x["is_name"] == 1)
+    print("number of positive_rows", len(positive_rows))
+    # Filter rows where is_name == 0
+    negative_rows = d.filter(lambda x: x["is_name"] == 0)
+    print("number of negative_rows", len(negative_rows), flush=True)
+    # Sample ~10% of negative rows
+    sample_size = int(0.1 * len(positive_rows))
+    sampled_negatives = negative_rows.shuffle(seed=42).select(range(sample_size))
+    # for each "text" that has the string nan, make it empty string
+    sampled_negatives = sampled_negatives.map(lambda x: {"text": "" if "nan" in x["text"] else x["text"]})
+    # Combine the datasets
+    combined_dataset = datasets.concatenate_datasets([positive_rows, sampled_negatives])
+    return combined_dataset
 
 def load_beir_dataset(name: str) -> datasets.Dataset:
     cache_path = (
@@ -242,13 +259,13 @@ def load_beir_datasets() -> datasets.DatasetDict:
 def load_standard_val_datasets() -> datasets.DatasetDict:
     """Loads a pre-defined set of standard val datasets."""
     d = {
-        "ag_news": load_ag_news_test(),
-        "anthropic_toxic_prompts": load_anthropic_toxic_prompts(),
-        "arxiv": load_arxiv_val(),
-        "python_code_alpaca": load_python_code_instructions_18k_alpaca(),
-        # "xsum_doc": load_xsum_val("document"),
-        # "xsum_summ": load_xsum_val("summary"),
-        "wikibio": load_wikibio_val(),
+        # "ag_news": load_ag_news_test(),
+        # "anthropic_toxic_prompts": load_anthropic_toxic_prompts(),
+        # "arxiv": load_arxiv_val(),
+        # "python_code_alpaca": load_python_code_instructions_18k_alpaca(),
+        # # "xsum_doc": load_xsum_val("document"),
+        # # "xsum_summ": load_xsum_val("summary"),
+        # "wikibio": load_wikibio_val(),
     }
     d = {k: retain_dataset_columns(v, ["text"]) for k, v in d.items()}
 

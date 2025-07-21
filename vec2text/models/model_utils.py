@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import transformers
 from sentence_transformers import SentenceTransformer
+from transformers import GPTNeoXForCausalLM
 
 EMBEDDER_MODEL_NAMES = [
     "bert",
@@ -32,6 +33,7 @@ EMBEDDER_MODEL_NAMES = [
     "gpt2-medium",
     "gpt2-large",
     "gpt2-xl",
+    "EleutherAI/pythia-14m",
 ]
 
 
@@ -197,6 +199,10 @@ def load_embedder_and_tokenizer(name: str, torch_dtype: str, **kwargs):
             "medicalai/ClinicalBERT", **model_kwargs
         )
         tokenizer = transformers.AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
+    elif "pythia" in name:
+        model = GPTNeoXForCausalLM.from_pretrained(name, **model_kwargs)
+        tokenizer = transformers.AutoTokenizer.from_pretrained(name)
+        tokenizer.pad_token = tokenizer.eos_token
     elif name.startswith("gpt2"):
         model = transformers.AutoModelForCausalLM.from_pretrained(
             name,

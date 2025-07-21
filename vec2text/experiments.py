@@ -18,6 +18,7 @@ from vec2text.data_helpers import dataset_from_args, load_standard_val_datasets
 from vec2text.models import (
     CorrectorEncoderFromLogitsModel,
     CorrectorEncoderModel,
+    InversionFromGradientsModel,
     InversionFromLogitsEmbModel,
     InversionFromLogitsModel,
     InversionModel,
@@ -58,7 +59,7 @@ logger = logging.getLogger(__name__)
 # We maintain our own cache because huggingface datasets caching
 # doesn't always work properly.
 DATASET_CACHE_PATH = os.environ.get(
-    "VEC2TEXT_CACHE", os.path.expanduser("~/.cache/inversion")
+    "VEC2TEXT_CACHE", os.path.expanduser("~/.cache/new_code_inversion")
 )
 
 
@@ -290,7 +291,7 @@ class Experiment(abc.ABC):
 
             wandb.init(
                 project=self._wandb_project_name,
-                name=self._wandb_exp_name,
+                run_name=self._wandb_exp_name,
                 id=self.kwargs_hash,
                 resume=True,
             )
@@ -579,28 +580,35 @@ class Experiment(abc.ABC):
                 max_shard_size="2GB",
             )
         ######################################################################
-        val_dataset_kwargs = {
-            "dataset_name": "__".join(
-                ["ag_news", "arxiv", "xsum_doc", "xsum_summ", "wikibio"]
-            ),
-            **dataset_kwargs,
-        }
-        val_dataset_path = os.path.join(
-            DATASET_CACHE_PATH, (md5_hash_kwargs(**val_dataset_kwargs) + ".arrow")
-        )
-        assert val_dataset_path != train_dataset_path
-        if os.path.exists(val_dataset_path):
-            val_datasets_dict = datasets.load_from_disk(val_dataset_path)
-            print("loaded dict of val datasets from", val_dataset_path)
-        else:
-            val_datasets_dict = self._load_val_datasets_uncached(
-                model=model,
-                tokenizer=tokenizer,
-                embedder_tokenizer=embedder_tokenizer,
-            )
-            print("saving val_dataset to path:", val_dataset_path)
-            val_datasets_dict.save_to_disk(val_dataset_path)
+        # val_dataset_kwargs = {
+        #     "dataset_name": "__".join(
+        #         ["ag_news", "arxiv", "xsum_doc", "xsum_summ", "wikibio"]
+        #     ),
+        #     **dataset_kwargs,
+        # }
+        # val_dataset_kwargs = {
+        #     "dataset_name": "__".join(
+        #         []
+        #     ),
+        #     **dataset_kwargs,
+        # }
+        # val_dataset_path = os.path.join(
+        #     DATASET_CACHE_PATH, (md5_hash_kwargs(**val_dataset_kwargs) + ".arrow")
+        # )
+        # assert val_dataset_path != train_dataset_path
+        # if os.path.exists(val_dataset_path):
+        #     val_datasets_dict = datasets.load_from_disk(val_dataset_path)
+        #     print("loaded dict of val datasets from", val_dataset_path)
+        # else:
+        #     val_datasets_dict = self._load_val_datasets_uncached(
+        #         model=model,
+        #         tokenizer=tokenizer,
+        #         embedder_tokenizer=embedder_tokenizer,
+        #     )
+        #     print("saving val_dataset to path:", val_dataset_path)
+        #     val_datasets_dict.save_to_disk(val_dataset_path)
         ######################################################################
+        val_datasets_dict = {}
         val_datasets_dict[self.data_args.dataset_name] = train_datasets["validation"]
         train_dataset = train_datasets["train"]
 
@@ -686,6 +694,20 @@ class InversionFromLogitsExperiment(InversionExperiment):
                 config=self.config,
             )
 
+
+class InversionFromGradientsExperiment(InversionExperiment):
+    @property
+    def trainer_cls(self):
+        return vec2text.trainers.InversionFromGradientsTrainer
+
+    @property
+    def _wandb_project_name(self) -> str:
+        return "emb-inv-grad-revamped"
+
+    def load_model(self) -> transformers.PreTrainedModel:
+        return InversionFromGradientsModel(
+            config=self.config,
+        )
 
 class InversionExperimentDecoderOnly(InversionExperiment):
     def load_model(self) -> transformers.PreTrainedModel:
@@ -808,6 +830,7 @@ EXPERIMENT_CLS_MAP = {
     "inversion_decoder_only": InversionExperimentDecoderOnly,
     "inversion_from_logits": InversionFromLogitsExperiment,
     "inversion_from_logits_emb": InversionFromLogitsExperiment,
+    "inversion_from_gradients": InversionFromGradientsExperiment,
     "corrector": CorrectorExperiment,
     "corrector_encoder": CorrectorExperiment,  # backwards-compatible; does same thing as just 'corrector'
     #

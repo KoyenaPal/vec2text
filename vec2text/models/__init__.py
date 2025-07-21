@@ -4,6 +4,7 @@ from .inversion import InversionModel  # noqa: F401
 from .inversion_unet import InversionModelUnet  # noqa: F401
 from .inversion_bow import InversionModelBagOfWords  # noqa: F401
 from .inversion_decoder import InversionModelDecoderOnly  # noqa: F401
+from .inversion_from_gradients import InversionFromGradientsModel  # noqa: F401
 from .inversion_from_logits import InversionFromLogitsModel  # noqa: F401
 from .inversion_from_logits_emb import InversionFromLogitsEmbModel  # noqa: F401
 from .inversion_na import InversionModelNonAutoregressive  # noqa: F401

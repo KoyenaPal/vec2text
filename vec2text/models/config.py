@@ -2,8 +2,21 @@ import json
 
 import transformers
 
+# update: I am adding this to the config to allow for specific handling of
+# which gradients we use for inversion (e.g. the gradients of the layer 1, etc.)
+# also adding another attribute to know which version of gradient reduction we use (i.e., SVD or JL, i.e.,  Johnson-Lindenstrauss)
 NEW_ATTRIBUTES = {
     "embedder_torch_dtype": "float32",
+    "reduction_version_SVD": "SVD",
+    "reduction_version_JL": "JL",
+    "embed_in_gradient": "embed_in",
+    "embed_out_gradient": "embed_out",
+    "layer_0_gradient": "layers.0",
+    "layer_1_gradient": "layers.1",
+    "layer_2_gradient": "layers.2",
+    "layer_3_gradient": "layers.3",
+    "layer_4_gradient": "layers.4",
+    "layer_5_gradient": "layers.5",
 }
 
 

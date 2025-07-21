@@ -29,13 +29,42 @@ def tokenize_function(
         # copy to 'labels' for language modeling loss
         # but set padding to -100
         # github.com/huggingface/transformers/blob/cbe63949d76efd153a1f389f38fe9ce1287e06b0/src/transformers/models/t5/modeling_t5.py#L1504-L1507
-        output["labels"] = [
-            [
-                (-100 if token_id == tokenizer.pad_token_id else token_id)
-                for token_id in ids
+        if "names" in examples:
+            names_output = tokenizer(
+                examples["names"],
+                padding=padding,
+                truncation=True,
+                max_length=max_seq_length,
+            )
+            output["labels"] = [
+                [
+                    (-100 if token_id == tokenizer.pad_token_id else token_id)
+                    for token_id in ids
+                ]
+                for ids in names_output["input_ids"]
             ]
-            for ids in output["input_ids"]
-        ]
+        # delete
+        else:
+            names_output = tokenizer(
+                [" "] * len(examples["text"]),
+                padding=padding,
+                truncation=True,
+                max_length=max_seq_length,
+            )
+            output["labels"] = [
+                [
+                    (-100 if token_id == tokenizer.pad_token_id else token_id)
+                    for token_id in ids
+                ]
+                for ids in names_output["input_ids"]
+            ]
+            # output["labels"] = [
+            #     [
+            #         (-100 if token_id == tokenizer.pad_token_id else token_id)
+            #         for token_id in ids
+            #     ]
+            #     for ids in output["input_ids"]
+            # ]
         embedder_output = embedder_tokenizer(
             examples[text_column_name],
             padding="max_length",
@@ -88,13 +117,43 @@ def tokenize_function_llama_chat(
         # copy to 'labels' for language modeling loss
         # but set padding to -100
         # github.com/huggingface/transformers/blob/cbe63949d76efd153a1f389f38fe9ce1287e06b0/src/transformers/models/t5/modeling_t5.py#L1504-L1507
-        output["labels"] = [
-            [
-                (-100 if token_id == tokenizer.pad_token_id else token_id)
-                for token_id in ids
+        if "names" in examples:
+            names_output = tokenizer(
+                examples["names"],
+                padding=padding,
+                truncation=True,
+                max_length=max_seq_length,
+            )
+            output["labels"] = [
+                [
+                    (-100 if token_id == tokenizer.pad_token_id else token_id)
+                    for token_id in ids
+                ]
+                for ids in names_output["input_ids"]
             ]
-            for ids in output["input_ids"]
-        ]
+        # delete
+        else:
+            names_output = tokenizer(
+                [" "] * len(examples["text"]),
+                padding=padding,
+                truncation=True,
+                max_length=max_seq_length,
+            )
+            output["labels"] = [
+                [
+                    (-100 if token_id == tokenizer.pad_token_id else token_id)
+                    for token_id in ids
+                ]
+                for ids in names_output["input_ids"]
+            ]
+            # output["labels"] = [
+            #     [
+            #         (-100 if token_id == tokenizer.pad_token_id else token_id)
+            #         for token_id in ids
+            #     ]
+            #     for ids in output["input_ids"]
+            # ]
+            
         embedder_output = embedder_tokenizer(
             text=[
                 f"[INST] <<SYS>>\n{system_message}\n<</SYS>>\n {instruction} [/INST]"
