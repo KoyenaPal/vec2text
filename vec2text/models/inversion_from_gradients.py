@@ -100,8 +100,8 @@ class InversionFromGradientsModel(InversionModel):
         Vs = []
         # TODO: make sure to get specific gradients indicated by the specification.
         for k, g in grads.items():
-            # check if any of the input data gradients are in the keys of the grads
-            if any(k in self.input_data_gradients for k in grads.keys()):
+            # check if any self.input_data_gradients elements are in k
+            if any(elem in k for elem in self.input_data_gradients):
                 print(f"k: {k}", flush=True)
                 # FOR NOW NOT DIFFERENTIATING BETWEEN SVD AND JL
                 #if self.config.reduction_version_SVD:
