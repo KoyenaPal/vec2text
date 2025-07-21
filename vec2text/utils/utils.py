@@ -157,7 +157,29 @@ def dataset_map_multi_worker(
     )
     torch.distributed.barrier()
     print("rank", rank, "deleting:", ds_shard_filepaths[rank])
-    shutil.rmtree(ds_shard_filepaths[rank])
+    try:
+        shutil.rmtree(ds_shard_filepaths[rank])
+    except OSError as e:
+        print(f"Warning: Could not delete {ds_shard_filepaths[rank]}: {e}")
+        # Try to delete individual files if directory deletion fails
+        try:
+            for root, dirs, files in os.walk(ds_shard_filepaths[rank], topdown=False):
+                for name in files:
+                    try:
+                        os.remove(os.path.join(root, name))
+                    except OSError:
+                        pass
+                for name in dirs:
+                    try:
+                        os.rmdir(os.path.join(root, name))
+                    except OSError:
+                        pass
+            try:
+                os.rmdir(ds_shard_filepaths[rank])
+            except OSError:
+                pass
+        except Exception:
+            pass
     return full_dataset
 
 

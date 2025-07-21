@@ -108,7 +108,7 @@ class InversionFromGradientsModel(InversionModel):
                     # implement Johnson-Lindenstrauss
                     pass
                 else:
-                    raise ValueError(f"Invalid gradient reduction version: {self.config.gradient_reduction_version}")
+                    raise ValueError(f"Invalid gradient reduction version")
 
                 if self.config.reduction_version_SVD:
                     if len(V.shape) == 3:
