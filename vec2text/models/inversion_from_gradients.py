@@ -90,8 +90,8 @@ class InversionFromGradientsModel(InversionModel):
         attention_mask: Optional[torch.Tensor],
         frozen_embeddings: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        print(f"input_ids shape: {input_ids.shape}")
-        print(f"attention_mask shape: {attention_mask.shape}")
+        print("input_ids shape:", input_ids.shape)
+        print("attention_mask shape:", attention_mask.shape)
         
         grads = self.call_embedding_model(
             input_ids=input_ids,
@@ -100,39 +100,49 @@ class InversionFromGradientsModel(InversionModel):
         Vs = []
         # TODO: make sure to get specific gradients indicated by the specification.
         for k, g in grads.items():
-            # check if any self.input_data_gradients elements are in k
             if any(elem in k for elem in self.input_data_gradients):
                 print(f"k: {k}", flush=True)
-                # FOR NOW NOT DIFFERENTIATING BETWEEN SVD AND JL
-                #if self.config.reduction_version_SVD:
-                _, _, V = torch.svd_lowrank(g, q=1)
-                if len(V.shape) == 3:
-                    Vs.append(V.squeeze(-1))
-                else:
-                    Vs.append(V)
-                #elif self.config.reduction_version_JL:
-                    # implement Johnson-Lindenstrauss
-                    pass
-                #else:
-                    #raise ValueError(f"Invalid gradient reduction version")
+        # g: [batch, d1, d2] or [batch, d]
+                if g.ndim == 2:
+                    g = g.unsqueeze(1)  # [batch, 1, d]
+                # Now g: [batch, d1, d2]
+                batch_vs = []
+                for b in range(g.shape[0]):
+                    g_b = g[b]  # [d1, d2]
+                    # SVD: get V (right singular vectors)
+                    # torch.svd_lowrank returns U, S, V; V: [d2, q]
+                    _, _, V = torch.svd_lowrank(g_b, q=1)
+                    batch_vs.append(V.squeeze(-1))  # [d2]
+                V = torch.stack(batch_vs, dim=0)  # [batch, d2]
+                Vs.append(V)
 
+        # Concatenate all Vs along last dim: [batch, total_dim]
         reduced_grad = torch.cat(Vs, dim=-1)
-        # pad with zeros to be divisible by encoder_hidden_dim
-        num_zeros_to_add = self.encoder_hidden_dim - (reduced_grad.shape[-1] % self.encoder_hidden_dim)
-        reduced_grad = nn.functional.pad(reduced_grad, (0, num_zeros_to_add))
-        reduced_grad = reduced_grad.view(reduced_grad.shape[0], -1, self.encoder_hidden_dim)
 
-        attention_mask = torch.ones((reduced_grad.shape[0], reduced_grad.shape[1]), device=reduced_grad.device)
+        # Pad to be divisible by encoder_hidden_dim (T5's d_model)
+        hidden_dim = self.encoder_hidden_dim
+        total_dim = reduced_grad.shape[-1]
+        remainder = total_dim % hidden_dim
+        if remainder != 0:
+            num_zeros_to_add = hidden_dim - remainder
+            reduced_grad = nn.functional.pad(reduced_grad, (0, num_zeros_to_add))
+        else:
+            num_zeros_to_add = 0
+
+        # Reshape to [batch, seq_len, hidden_dim]
+        seq_len = reduced_grad.shape[-1] // hidden_dim
+        reduced_grad = reduced_grad.view(reduced_grad.shape[0], seq_len, hidden_dim)
+
+        # Attention mask: [batch, seq_len]
+        attention_mask = torch.ones((reduced_grad.shape[0], seq_len), device=reduced_grad.device)
 
         assert reduced_grad.shape == (
             attention_mask.shape[0],
             attention_mask.shape[1],
-            self.encoder_hidden_dim,
+            hidden_dim,
         )
-
-        print(f"final reduced_grad shape: {reduced_grad.shape}")
-        print(f"final attention_mask shape: {attention_mask.shape}", flush=True)
         return reduced_grad, attention_mask
+
 
     def generate(
         self,

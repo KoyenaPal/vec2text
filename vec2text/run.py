@@ -95,7 +95,8 @@ def main():
         use_wandb=args.wandb,
         learning_rate=args.learning_rate,
         eval_steps=args.eval_steps,
-        run_name=wandb_exp_name
+        run_name=wandb_exp_name,
+        ddp_find_unused_parameters=True
     )
     experiment = experiment_from_args(model_args, data_args, training_args)
     experiment.run()

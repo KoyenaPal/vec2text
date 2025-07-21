@@ -179,6 +179,7 @@ class Experiment(abc.ABC):
 
         # train.   :)
         print(f"train() called – resume-from_checkpoint = {checkpoint}")
+        trainer.enable_emb_cos_sim_metric()
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
