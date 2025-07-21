@@ -291,7 +291,7 @@ class Experiment(abc.ABC):
 
             wandb.init(
                 project=self._wandb_project_name,
-                run_name=self._wandb_exp_name,
+                name=self._wandb_exp_name,
                 id=self.kwargs_hash,
                 resume=True,
             )
