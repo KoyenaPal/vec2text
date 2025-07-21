@@ -44,16 +44,16 @@ class InversionFromGradientsModel(InversionModel):
 
         self.embedder_params = {k: v.detach().to("cuda") for k, v in self.embedder.named_parameters()}
         self.embedder_buffers = {k: v.detach().to("cuda") for k, v in self.embedder.named_buffers()}
-        self.reduction_version_SVD = self.config.reduction_version_SVD
-        self.reduction_version_JL = self.config.reduction_version_JL
+        self.reduction_version_SVD = getattr(self.config, NEW_ATTRIBUTES["reduction_version_SVD"], None)
+        self.reduction_version_JL = getattr(self.config, NEW_ATTRIBUTES["reduction_version_JL"], None)
         # Initialize gradients from config
         self.input_data_gradients = []
 
         for attr in NEW_ATTRIBUTES:
             if "gradient" in attr:
-                value = getattr(config, attr, None)
-                if value is not None:
-                    self.input_data_gradients.append(value)
+                value = getattr(self.config, attr, None)
+                if value is True:
+                    self.input_data_gradients.append(NEW_ATTRIBUTES[attr])
 
 
     def call_embedding_model(
@@ -100,21 +100,21 @@ class InversionFromGradientsModel(InversionModel):
         Vs = []
         # TODO: make sure to get specific gradients indicated by the specification.
         for k, g in grads.items():
-            if k in self.input_data_gradients:
+            # check if any of the input data gradients are in the keys of the grads
+            if any(k in self.input_data_gradients for k in grads.keys()):
                 print(f"k: {k}", flush=True)
-                if self.config.reduction_version_SVD:
-                    _, _, V = torch.svd_lowrank(g, q=1)
-                elif self.config.reduction_version_JL:
+                # FOR NOW NOT DIFFERENTIATING BETWEEN SVD AND JL
+                #if self.config.reduction_version_SVD:
+                _, _, V = torch.svd_lowrank(g, q=1)
+                if len(V.shape) == 3:
+                    Vs.append(V.squeeze(-1))
+                else:
+                    Vs.append(V)
+                #elif self.config.reduction_version_JL:
                     # implement Johnson-Lindenstrauss
                     pass
-                else:
-                    raise ValueError(f"Invalid gradient reduction version")
-
-                if self.config.reduction_version_SVD:
-                    if len(V.shape) == 3:
-                        Vs.append(V.squeeze(-1))
-                    else:
-                        Vs.append(V)
+                #else:
+                    #raise ValueError(f"Invalid gradient reduction version")
 
         reduced_grad = torch.cat(Vs, dim=-1)
         # pad with zeros to be divisible by encoder_hidden_dim

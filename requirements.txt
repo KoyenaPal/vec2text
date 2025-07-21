@@ -12,6 +12,6 @@ sentence_transformers
 tenacity
 tokenizers
 tqdm
-transformers
+transformers==4.43.4
 jaxtyping
 wandb
