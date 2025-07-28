@@ -16,8 +16,8 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--resume", action="store_true", default=False)
     # REMEMBER TO CHANGE THIS
-    parser.add_argument("--output_dir", type=str, default="person_finder_inverter_models")
-    parser.add_argument("--wandb_exp_name", type=str, default="initial_run_all_grads")
+    parser.add_argument("--output_dir", type=str, default="person_finder_inverter_models_100_epochs_label_smoothing")
+    parser.add_argument("--wandb_exp_name", type=str, default="initial_run_all_grads_100_epochs_label_smoothing")
     parser.add_argument("--all_grads", action="store_true", default=False)
     parser.add_argument("--embed_in_grads", action="store_true", default=False)
     parser.add_argument("--embed_out_grads", action="store_true", default=False)
@@ -32,7 +32,7 @@ def main():
     parser.add_argument("--do_eval", action="store_true", default=False)
     parser.add_argument("--eval_model", action="store_true", default=False)
     parser.add_argument("--eval_steps", type=int, default=500)
-    parser.add_argument("--learning_rate", type=float, default=0.0002)
+    parser.add_argument("--learning_rate", type=float, default=0.001)
     parser.add_argument("--batch_size", type=int, default=64)
 
     args = parser.parse_args()
@@ -96,7 +96,9 @@ def main():
         learning_rate=args.learning_rate,
         eval_steps=args.eval_steps,
         run_name=wandb_exp_name,
-        ddp_find_unused_parameters=True
+        ddp_find_unused_parameters=True,
+        warmup_steps=500,
+        num_train_epochs=100,
     )
     experiment = experiment_from_args(model_args, data_args, training_args)
     experiment.run()
