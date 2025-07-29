@@ -16,8 +16,8 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--resume", action="store_true", default=False)
     # REMEMBER TO CHANGE THIS
-    parser.add_argument("--output_dir", type=str, default="person_finder_inverter_models_100_epochs_label_smoothing")
-    parser.add_argument("--wandb_exp_name", type=str, default="initial_run_all_grads_100_epochs_label_smoothing")
+    parser.add_argument("--output_dir", type=str, default="person_finder_inverter_models_100_epochs")
+    parser.add_argument("--wandb_exp_name", type=str, default="initial_run_all_grads_100_epochs")
     parser.add_argument("--all_grads", action="store_true", default=False)
     parser.add_argument("--embed_in_grads", action="store_true", default=False)
     parser.add_argument("--embed_out_grads", action="store_true", default=False)
