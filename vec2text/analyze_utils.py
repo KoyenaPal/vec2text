@@ -67,21 +67,21 @@ def load_experiment_and_trainer(
         print("[analyze_utils] loading args from checkpoint", checkpoint)
         try:
             print("[analyze_utils] loading data_args from", os.path.join(checkpoint, os.pardir, "data_args.bin"))
-            data_args = torch.load(os.path.join(checkpoint, os.pardir, "data_args.bin"))
+            data_args = torch.load(os.path.join(checkpoint, os.pardir, "data_args.bin"), weights_only=False)
         except (FileNotFoundError):
-            data_args = torch.load(os.path.join(checkpoint, "data_args.bin"))
+            data_args = torch.load(os.path.join(checkpoint, "data_args.bin"), weights_only=False)
         try:
             model_args = torch.load(
-                os.path.join(checkpoint, os.pardir, "model_args.bin")
+                os.path.join(checkpoint, os.pardir, "model_args.bin"), weights_only=False
             )
         except (FileNotFoundError):
-            model_args = torch.load(os.path.join(checkpoint, "model_args.bin"))
+            model_args = torch.load(os.path.join(checkpoint, "model_args.bin"), weights_only=False)
         try:
             training_args = torch.load(
-                os.path.join(checkpoint, os.pardir, "training_args.bin")
+                os.path.join(checkpoint, os.pardir, "training_args.bin"), weights_only=False
             )
         except (FileNotFoundError):
-            training_args = torch.load(os.path.join(checkpoint, "training_args.bin"))
+            training_args = torch.load(os.path.join(checkpoint, "training_args.bin"), weights_only=False)
 
     training_args.dataloader_num_workers = 0  # no multiprocessing :)
     training_args.use_wandb = False

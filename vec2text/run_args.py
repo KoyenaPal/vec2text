@@ -182,14 +182,14 @@ class ModelArguments:
     )
     
     # Gradient-related attributes for inversion from gradients
-    reduction_version_SVD: bool = field(
-        default=True,
-        metadata={"help": "Whether to use SVD for gradient reduction"},
-    )
-    reduction_version_JL: bool = field(
-        default=False,
-        metadata={"help": "Whether to use Johnson-Lindenstrauss for gradient reduction"},
-    )
+    # reduction_version_SVD: bool = field(
+    #     default=False,
+    #     metadata={"help": "Whether to use SVD for gradient reduction"},
+    # )
+    # reduction_version_JL: bool = field(
+    #     default=False,
+    #     metadata={"help": "Whether to use Johnson-Lindenstrauss for gradient reduction"},
+    # )
     embed_in_gradient: bool = field(
         default=False,
         metadata={"help": "Whether to use embed_in gradients"},
@@ -221,6 +221,14 @@ class ModelArguments:
     layer_5_gradient: bool = field(
         default=False,
         metadata={"help": "Whether to use layer 5 gradients"},
+    )
+    per_batch: bool = field(
+        default=True,
+        metadata={"help": "Whether to use per-batch gradients"},
+    )
+    reduction_version: Optional[str] = field(
+        default="SVD",
+        metadata={"help": "Whether to use SVD or JL for gradient reduction"},
     )
 
     def __post_init__(self):
@@ -310,6 +318,9 @@ class TrainingArguments(transformers.TrainingArguments):
     report_to: str = "wandb"
     per_device_train_batch_size: int = field(
         default=128, metadata={"help": "Batch size per GPU/TPU core/CPU for training."}
+    )
+    gradient_accumulation_steps: int = field(
+        default=1, metadata={"help": "Number of updates steps to accumulate before performing a backward/update pass."}
     )
     bf16: bool = field(
         default=False,
@@ -402,6 +413,15 @@ class TrainingArguments(transformers.TrainingArguments):
         },
     )
 
+    # per_batch: bool = field(
+    #     default=True,
+    #     metadata={"help": "Whether to use per-batch gradients"},
+    # )
+    # reduction_version: Optional[str] = field(
+    #     default="SVD",
+    #     metadata={"help": "Whether to use SVD or JL for gradient reduction"},
+    # )
+
     include_inputs_for_metrics: bool = True
 
     def __setattr__(self, name, value):
@@ -441,3 +461,4 @@ class TrainingArguments(transformers.TrainingArguments):
 
         self.do_eval = False
         # self.ddp_backend = "gloo"
+

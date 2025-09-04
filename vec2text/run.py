@@ -8,7 +8,7 @@ from vec2text.run_args import DataArguments, ModelArguments, TrainingArguments
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, default="t5-base")
+    parser.add_argument("--model", type=str, default="t5-small")
     parser.add_argument("--embedder", type=str, default="EleutherAI/pythia-14m")
     parser.add_argument("--hidden", action="store_true")
     parser.add_argument("--from_gradients", action="store_true")
@@ -16,8 +16,8 @@ def main():
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--resume", action="store_true", default=False)
     # REMEMBER TO CHANGE THIS
-    parser.add_argument("--output_dir", type=str, default="person_finder_inverter_models_100_epochs")
-    parser.add_argument("--wandb_exp_name", type=str, default="initial_run_all_grads_100_epochs")
+    parser.add_argument("--output_dir", type=str, default="parameter-diff-all-grads-small_lr_0.0001_sq_8")
+    parser.add_argument("--wandb_exp_name", type=str, default="parameter-diff-all-grads-small_lr_0.0001_sq_8")
     parser.add_argument("--all_grads", action="store_true", default=False)
     parser.add_argument("--embed_in_grads", action="store_true", default=False)
     parser.add_argument("--embed_out_grads", action="store_true", default=False)
@@ -32,8 +32,11 @@ def main():
     parser.add_argument("--do_eval", action="store_true", default=False)
     parser.add_argument("--eval_model", action="store_true", default=False)
     parser.add_argument("--eval_steps", type=int, default=500)
-    parser.add_argument("--learning_rate", type=float, default=0.001)
+    parser.add_argument("--learning_rate", type=float, default=0.0001)
     parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=1, 
+                       help="Number of updates steps to accumulate before performing a backward/update pass")
+    parser.add_argument("--per_batch", action="store_true", default=True)
 
     args = parser.parse_args()
     # look at eval_steps
@@ -51,11 +54,12 @@ def main():
     layer_5_grads_suffix = "__layer_5" if args.layer_5_grads else ""
     reduction_version_SVD_suffix = "__reduction_version_SVD" if args.reduction_version_SVD else ""
     reduction_version_JL_suffix = "__reduction_version_JL" if args.reduction_version_JL else ""
-    
+    gradient_accumulation_suffix = f"__grad_accum_{args.gradient_accumulation_steps}" if args.gradient_accumulation_steps > 1 else ""
+    per_batch_suffix = "__per_batch" if args.per_batch else ""
     use_less_data = 1000 if args.tinydata else -1
     wandb_exp_name = args.wandb_exp_name
     if not args.all_grads:
-        wandb_exp_name = args.wandb_exp_name + hidden_data_suffix + tiny_data_suffix + from_gradients_suffix + all_grads_suffix + embed_in_grads_suffix + embed_out_grads_suffix + layer_0_grads_suffix + layer_1_grads_suffix + layer_2_grads_suffix + layer_3_grads_suffix + layer_4_grads_suffix + layer_5_grads_suffix + reduction_version_SVD_suffix + reduction_version_JL_suffix
+        wandb_exp_name = args.wandb_exp_name + hidden_data_suffix + tiny_data_suffix + from_gradients_suffix + all_grads_suffix + embed_in_grads_suffix + embed_out_grads_suffix + layer_0_grads_suffix + layer_1_grads_suffix + layer_2_grads_suffix + layer_3_grads_suffix + layer_4_grads_suffix + layer_5_grads_suffix + reduction_version_SVD_suffix + reduction_version_JL_suffix + gradient_accumulation_suffix
     if args.all_grads:
         args.embed_in_grads = True
         args.embed_out_grads = True
@@ -65,15 +69,16 @@ def main():
         args.layer_3_grads = True
         args.layer_4_grads = True
         args.layer_5_grads = True
-        args.reduction_version_SVD = True
+        # args.reduction_version_SVD = True
+        wandb_exp_name = args.wandb_exp_name + "__all_grads" + gradient_accumulation_suffix
     model_args = ModelArguments(
         model_name_or_path=args.model,
         embedder_model_name=args.embedder,
         use_frozen_embeddings_as_input=False,
         # embeddings_from_layer_n=embeddings_from_layer_n,
         embedder_no_grad=(not args.from_gradients),
-        reduction_version_SVD=args.reduction_version_SVD,
-        reduction_version_JL=args.reduction_version_JL,
+        per_batch=args.per_batch,
+        reduction_version = "SVD" if args.reduction_version_SVD else "JL" if args.reduction_version_JL else None,
         embed_in_gradient=args.embed_in_grads,
         embed_out_gradient=args.embed_out_grads,
         layer_0_gradient=args.layer_0_grads,
@@ -97,8 +102,9 @@ def main():
         eval_steps=args.eval_steps,
         run_name=wandb_exp_name,
         ddp_find_unused_parameters=True,
-        warmup_steps=500,
-        num_train_epochs=100,
+        warmup_steps=2000,
+        num_train_epochs=25,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
     )
     experiment = experiment_from_args(model_args, data_args, training_args)
     experiment.run()

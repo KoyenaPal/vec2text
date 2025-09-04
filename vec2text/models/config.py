@@ -7,6 +7,7 @@ import transformers
 # also adding another attribute to know which version of gradient reduction we use (i.e., SVD or JL, i.e.,  Johnson-Lindenstrauss)
 NEW_ATTRIBUTES = {
     "embedder_torch_dtype": "float32",
+    "per_batch": "per_batch",
     "reduction_version_SVD": "SVD",
     "reduction_version_JL": "JL",
     "embed_in_gradient": "embed_in",

@@ -1,0 +1,15 @@
+[analyze_utils] Loading model from checkpoint: /share/u/koyena/rep-inverse/vec2text/copy_of_layer_3_till_end_run/replaced_names_data_fine_tuned_version__EleutherAI__pythia-14m__person_finder__from_gradients/checkpoint-239800
+[analyze_utils] adding cwd to path: /share/u/koyena/vec2text/vec2text
+[analyze_utils] loading args from checkpoint /share/u/koyena/rep-inverse/vec2text/copy_of_layer_3_till_end_run/replaced_names_data_fine_tuned_version__EleutherAI__pythia-14m__person_finder__from_gradients/checkpoint-239800
+[analyze_utils] loading data_args from /share/u/koyena/rep-inverse/vec2text/copy_of_layer_3_till_end_run/replaced_names_data_fine_tuned_version__EleutherAI__pythia-14m__person_finder__from_gradients/checkpoint-239800/../data_args.bin
+> checkpoint: /share/u/koyena/rep-inverse/vec2text/copy_of_layer_3_till_end_run/replaced_names_data_fine_tuned_version__EleutherAI__pythia-14m__person_finder__from_gradients/checkpoint-239800
+Experiment output_dir = new_data_layers_3_till_end_grads/replaced_names_data_fine_tuned_version__EleutherAI__pythia-14m__person_finder__from_gradients
+Loading datasets with TOKENIZERS_PARALLELISM = False
+loading train dataset from path: /share/u/koyena/.cache/new_code_inversion/75f47503905d0cf77f5d686ce9ad54e3.arrow
+================ Begin trainer sanity check ================
+	Input to encode -> Twas brillig, and the slithy toves, Did gyre and gimble in the wabe, All mimsy were the borogoves, And the mome raths outgrabe.
+max_length: 128
+DEBUG: inputs keys: ['embedder_input_ids', 'embedder_attention_mask']
+DEBUG: input_ids in inputs: False
+DEBUG: attention_mask in inputs: False
+DEBUG: frozen_embeddings in inputs: False

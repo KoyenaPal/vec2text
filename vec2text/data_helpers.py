@@ -108,6 +108,10 @@ def dataset_from_args(data_args: DataArguments) -> datasets.DatasetDict:
         raw_datasets = load_person_finder()
         raw_datasets = raw_datasets.train_test_split(test_size=0.2)
         raw_datasets["validation"] = raw_datasets["test"]
+    elif data_args.dataset_name == "profile_names":
+        raw_datasets = load_profile_names()
+        raw_datasets = raw_datasets.train_test_split(test_size=0.01)
+        raw_datasets["validation"] = raw_datasets["test"]
     elif data_args.dataset_name == "luar_reddit":
         all_luar_datasets = load_luar_reddit()
         raw_datasets = datasets.DatasetDict(
@@ -212,6 +216,11 @@ def load_person_finder() -> datasets.Dataset:
     combined_dataset = datasets.concatenate_datasets([positive_rows, sampled_negatives])
     return combined_dataset
 
+def load_profile_names() -> datasets.Dataset:
+    d = datasets.load_dataset("koyena/profile_names")["train"]
+    d = d.rename_column("sentence", "text")
+    return d
+
 def load_beir_dataset(name: str) -> datasets.Dataset:
     cache_path = (
         datasets.config.HF_DATASETS_CACHE
@@ -270,6 +279,7 @@ def load_standard_val_datasets() -> datasets.DatasetDict:
         # # "xsum_doc": load_xsum_val("document"),
         # # "xsum_summ": load_xsum_val("summary"),
         # "wikibio": load_wikibio_val(),
+        "profile_names": load_profile_names(),
     }
     d = {k: retain_dataset_columns(v, ["text"]) for k, v in d.items()}
 
